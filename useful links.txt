@@ -1,0 +1,15 @@
+Top Free News API Comparison:
+https://github.com/free-news-api/news-api
+https://github.com/ddsky/world-news-api-clients/tree/main/php
+
+https://newsapi.org/docs/endpoints/top-headlines
+https://github.com/jcobhams/newsapi-php
+
+https://www.newscatcherapi.com/
+
+https://www.contify.com/news-api/
+
+
+
+Just for fun:
+https://github.com/HackerNews/API
