@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Config;
 
 class NewsAPIService{
     protected $newsProviderInstance;
-    public function __construct()
+    public function __construct()  
     {
-        $this->newsProviderInstance = new NewsApi(\Config::get('app.newsapi_key'));
+        $this->newsProviderInstance = new NewsApi(config('app.newsapi_key'));
     }
 
-    public function getRuTopHeadlines($country, $q){
-        return $this->newsProviderInstance->getTopHeadlines(['q' => $q, 'country' => $country]);
+    public function getRuTopHeadlines($q){
+        return $this->newsProviderInstance->getTopHeadlines(
+            q: $q
+        );
     }
 }
