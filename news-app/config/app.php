@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'newsapi_key' => env('NEWSAPI_KEY', ''),
+
 ];
