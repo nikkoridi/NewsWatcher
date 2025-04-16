@@ -15,17 +15,17 @@ class NewsAPIService{
         $this->newsProviderInstance = new NewsApi(config('app.newsapi_key'));
     }
 
-    private function printArticlesData($headlines): void{
+    private function printArticlesData($headlines, OutputInterface $output): void{
         $style = new SymfonyStyle($output->getInput(), $output);
         if (!empty($headlines)){
             foreach ($headlines->articles as $article){
-                line("Title: " . $article->title);
-                line("Author: " . $article->author);
-                line("Url: " . $article->url);
-                line("Description: " . $article->description);
-                line("---------");
-                line("Content: " . $article->content);
-                line("Source: " . $article->source->name);
+                $style->line("Title: " . $article->title);
+                $style->line("Author: " . $article->author);
+                $style->line("Url: " . $article->url);
+                $style->line("Description: " . $article->description);
+                $style->line("---------");
+                $style->line("Content: " . $article->content);
+                $style->line("Source: " . $article->source->name);
                 //$this->line("" . $article['']);
                 info("=======");
             }
