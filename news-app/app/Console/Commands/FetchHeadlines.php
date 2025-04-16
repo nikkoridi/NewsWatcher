@@ -5,8 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 use App\News\NewsAPIService;
+use jcobhams\NewsApi\NewsApiException;
 
-class FetchRuPHPHeadlines extends Command
+class FetchHeadlines extends Command
 {
     /**
      * The name and signature of the console command.
@@ -20,7 +21,7 @@ class FetchRuPHPHeadlines extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch PHP news headlines (Ru)';
+    protected $description = 'Fetch news headlines';
 
     private $newsAPIService;
 
@@ -52,6 +53,10 @@ class FetchRuPHPHeadlines extends Command
     public function handle()
     {
         $keyword = $this->argument('keyword');
-        $this->printArticlesData($this->newsAPIService->getTopHeadlinesQuery($keyword));
+        try {
+            $this->printArticlesData($this->newsAPIService->getTopHeadlinesQuery($keyword));
+        } catch (NewsApiException $e) {
+            $this->error("API error");
+        }
     }
 }

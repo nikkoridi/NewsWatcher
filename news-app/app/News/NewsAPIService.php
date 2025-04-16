@@ -5,6 +5,7 @@ namespace App\News;
 use jcobhams\NewsApi\NewsApi;
 
 use Illuminate\Support\Facades\Config;
+use jcobhams\NewsApi\NewsApiException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -34,9 +35,18 @@ class NewsAPIService{
         }
     }
 
+    /**
+     * @throws NewsApiException
+     */
     public function getTopHeadlinesQuery(string $query){
-        return $this->newsProviderInstance->getTopHeadlines(q: $query);
+        return $this->newsProviderInstance->getTopHeadlines(q: $query, page_size: 100);
         //$this->printArticlesData($data);
     }
 
+    /**
+     * @throws NewsApiException
+     */
+    public function getEverythingQuery(string $query, $domains = null){
+        return $this->newsProviderInstance->getEverything(q: $query, domains:$domains, page_size: 100);
+    }
 }
