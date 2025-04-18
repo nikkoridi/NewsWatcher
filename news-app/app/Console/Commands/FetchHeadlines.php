@@ -5,22 +5,23 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 use App\News\NewsAPIService;
+use jcobhams\NewsApi\NewsApiException;
 
-class FetchRuPHPHeadlines extends Command
+class FetchHeadlines extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:fetch-ru-p-h-p-headlines';
+    protected $signature = 'app:fetch-headlines {keyword}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch PHP news headlines (Ru)';
+    protected $description = 'Fetch news headlines';
 
     private $newsAPIService;
 
@@ -29,14 +30,9 @@ class FetchRuPHPHeadlines extends Command
         $this->newsAPIService = $newsAPIService;
     }
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
-    {
-        $data = $this->newsAPIService->getRuTopHeadlines('php');
-        if ($data->articles){
-            foreach ($data->articles as $article){
+    private function printArticlesData($headlines): void{
+        if (!empty($headlines)){
+            foreach ($headlines->articles as $article){
                 $this->line("Title: " . $article->title);
                 $this->line("Author: " . $article->author);
                 $this->line("Url: " . $article->url);
@@ -49,6 +45,18 @@ class FetchRuPHPHeadlines extends Command
             }
         } else {
             $this->error("The app has found no news =(");
+        }
+    }
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        $keyword = $this->argument('keyword');
+        try {
+            $this->printArticlesData($this->newsAPIService->getTopHeadlinesQuery($keyword));
+        } catch (NewsApiException $e) {
+            $this->error("API error");
         }
     }
 }
