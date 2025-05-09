@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use jcobhams\NewsApi\NewsApi;
 use jcobhams\NewsApi\NewsApiException;
 use Carbon\Carbon;
 
 class NewsAPIController extends Controller
 {
-    protected $newsProviderInstance;
+    protected NewsApi $newsProviderInstance;
 
     const TECH_DOMAINS = ["habr.com","news.ycombinator.com", "spectrum.ieee.org", "wired.com", "technologyreview.com"];
 
@@ -31,15 +30,6 @@ class NewsAPIController extends Controller
     public function getEverythingQuery(string $query, $domains = null){
         return $this->newsProviderInstance->getEverything(q: $query, domains:$domains, page_size: 100);
     }
-
-    /*
-    enum DataStepsBack {
-       case Year;
-       case Month;
-       case Week;
-       case Day;
-    }
-    */
 
     /**
      * @throws NewsApiException
