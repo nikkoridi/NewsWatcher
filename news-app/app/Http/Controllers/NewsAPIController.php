@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use jcobhams\NewsApi\NewsApi;
+use jcobhams\NewsApi\NewsApiException;
+use Carbon\Carbon;
 
 class NewsAPIController extends Controller
 {
     protected $newsProviderInstance;
 
-    private const TECH_DOMAINS = ["habr.com","news.ycombinator.com"];
+    const TECH_DOMAINS = ["habr.com","news.ycombinator.com", "spectrum.ieee.org", "wired.com", "technologyreview.com"];
 
     public function __construct()
     {
@@ -43,33 +45,38 @@ class NewsAPIController extends Controller
      * @throws NewsApiException
      */
     public function getTimeBackNews($date, string $stepBack, int $numberBack){
-        $searchDate = new \DateTime($date);
-        switch ($stepBack) {
-            case "year":
-                $searchDate = $searchDate->modify("{-1*$numberBack} year")->format('Y-m-d');
-                break;
-            case "month":
-                $searchDate = $searchDate->modify("{-1*$numberBack}  month")->format('Y-m-d');
-                break;
-            case "week":
-                $searchDate = $searchDate->modify("{-7*$numberBack}  days")->format('Y-m-d');
-                break;
-            case "day":
-                $searchDate = $searchDate->modify("{-1*$numberBack} day")->format('Y-m-d');
-                break;
-                break;
-            default:
-                $searchDate = $searchDate->modify("{-1*$numberBack} day")->format('Y-m-d');
+        $searchDate =  Carbon::parse($date, 'Europe/Moscow');
+        $returnWarning = "We're really sorry, but our API supports only a month back search!";
+        if ($numberBack <= 0) {
+            $searchDate = $searchDate->format('Y-m-d');
         }
-        return $this->newsProviderInstance->getEverything(domains: "habr.com, news.ycombinator.com",
-            from:$searchDate, to:$searchDate, page_size: 100);
+        elseif (($stepBack === 'month' && $numberBack) > 1 || ($stepBack === 'day' && $numberBack) > 30) {
+            $searchDate = $searchDate->modify('-1 month');
+        }
+        else{
+            $searchDate = match ($stepBack) {
+                //"year" => $searchDate->modify(-$numberBack .'year')->format('Y-m-d'),
+                "month" => $searchDate->modify(-$numberBack .'month')->format('Y-m-d'),
+                "week" => $searchDate->modify(-7*$numberBack .'days')->format('Y-m-d'),
+                default => $searchDate->modify(-$numberBack .'day')->format('Y-m-d'),
+            };
+        }
+        try{
+            // It's a wierd way, but I need to warn the user, the answer is JSON anyway
+            // json_encode([$returnWarning, $this->newsProviderInstance->getEverything(domains: implode(', ', NewsAPIController::TECH_DOMAINS),
+            //                from:$searchDate, to:$searchDate, page_size: 100)]);
+            return $this->newsProviderInstance->getEverything(domains: implode(', ', NewsAPIController::TECH_DOMAINS),
+                           from:$searchDate, to:$searchDate, page_size: 100);
+        }
+        catch (NewsApiException $e){
+            return json_encode($e);
+        }
     }
 
     /**
      * @throws NewsApiException
      */
     public function getTodayTopNews(){
-        //$searchDate = (new \DateTime())->format('Y-m-d');
         return $this->newsProviderInstance->getTopHeadLines(category: "technology", page_size: 1);
     }
 

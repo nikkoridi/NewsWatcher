@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\NewsAPIController;
 use Illuminate\Console\Command;
 
 use App\News\NewsAPIService;
@@ -14,48 +15,42 @@ class FetchHeadlines extends Command
      *
      * @var string
      */
-    protected $signature = 'app:fetch-headlines {keyword}';
+    protected $signature = 'app:fetch-headlines {query}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch news headlines';
+    protected $description = 'Fetch news headlines. Possible variants: query (will search given word)
+    or todaytop|today-top (will show today top news)';
 
-    private $newsAPIService;
+    private NewsAPIController $newsAPIController;
+    private PrintArticlesDataCLI $printArticlesDataCLI;
 
-    public function __construct(NewsAPIService $newsAPIService){
+    public function __construct(){
         parent::__construct();
-        $this->newsAPIService = $newsAPIService;
+        $this->newsAPIController = new NewsAPIController();
+        $this->printArticlesDataCLI = new PrintArticlesDataCLI();
     }
 
-    private function printArticlesData($headlines): void{
-        if (!empty($headlines)){
-            foreach ($headlines->articles as $article){
-                $this->line("Title: " . $article->title);
-                $this->line("Author: " . $article->author);
-                $this->line("Url: " . $article->url);
-                $this->line("Description: " . $article->description);
-                $this->line("---------");
-                $this->line("Content: " . $article->content);
-                $this->line("Source: " . $article->source->name);
-                //$this->line("" . $article['']);
-                $this->info("=======");
-            }
-        } else {
-            $this->error("The app has found no news =(");
-        }
-    }
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $keyword = $this->argument('keyword');
+        $keyword = $this->argument('query');
         try {
-            $this->printArticlesData($this->newsAPIService->getTopHeadlinesQuery($keyword));
-        } catch (NewsApiException $e) {
+            if (strtolower($keyword) === "todaytop" || strtolower($keyword) === "today-top")
+                $this->printArticlesDataCLI->printArticlesData(
+                    $this->newsAPIController->getTodayTopNews()
+                );
+            else
+                $this->printArticlesDataCLI->printArticlesData(
+                    $this->newsAPIController->getTopHeadlinesQuery($keyword)
+                );
+        }
+        catch (NewsApiException $e) {
             $this->error("API error");
         }
     }
