@@ -17,11 +17,11 @@ Route::get('/top-headlines/todayTop',
 Route::get('/everything/query/{query}',
 [NewsAPIController::class, 'getEverythingQuery']);
 
-Route::get('/everything/TimeBack/{date}/{stepBack}/{numberBack}',
+Route::get('/everything/timeBack/{date}/{stepBack}/{numberBack}',
 [NewsAPIController::class, 'getTimeBackNews']);
 
 Route::get('/everything/habrTop',
 [NewsAPIController::class, 'getTopHabrTen']);
 
-Route::get('/everything/habrSearch{query}',
+Route::get('/everything/habrSearch/{query}',
 [NewsAPIController::class, 'getHabrSearch']);
