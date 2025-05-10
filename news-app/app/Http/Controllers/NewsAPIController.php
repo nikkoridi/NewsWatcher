@@ -1,41 +1,20 @@
 <?php
 
-namespace App\News;
+namespace App\Http\Controllers;
 
 use jcobhams\NewsApi\NewsApi;
-
-use Illuminate\Support\Facades\Config;
 use jcobhams\NewsApi\NewsApiException;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use Carbon\Carbon;
 
-class NewsAPIService{
-    protected $newsProviderInstance;
+class NewsAPIController extends Controller
+{
+    protected NewsApi $newsProviderInstance;
 
-    private const TECH_DOMAINS = ["habr.com","news.ycombinator.com"];
+    const TECH_DOMAINS = ["habr.com","news.ycombinator.com", "spectrum.ieee.org", "wired.com", "technologyreview.com"];
 
     public function __construct()
     {
         $this->newsProviderInstance = new NewsApi(config('app.newsapi_key'));
-    }
-
-    private function printArticlesData($headlines, OutputInterface $output): void{
-        $style = new SymfonyStyle($output->getInput(), $output);
-        if (!empty($headlines)){
-            foreach ($headlines->articles as $article){
-                $style->line("Title: " . $article->title);
-                $style->line("Author: " . $article->author);
-                $style->line("Url: " . $article->url);
-                $style->line("Description: " . $article->description);
-                $style->line("---------");
-                $style->line("Content: " . $article->content);
-                $style->line("Source: " . $article->source->name);
-                //$this->line("" . $article['']);
-                info("=======");
-            }
-        } else {
-            error("The app has found no news =(");
-        }
     }
 
     /**
@@ -43,7 +22,6 @@ class NewsAPIService{
      */
     public function getTopHeadlinesQuery(string $query){
         return $this->newsProviderInstance->getTopHeadlines(q: $query, page_size: 100);
-        //$this->printArticlesData($data);
     }
 
     /**
@@ -53,46 +31,42 @@ class NewsAPIService{
         return $this->newsProviderInstance->getEverything(q: $query, domains:$domains, page_size: 100);
     }
 
-    /*
-    enum DataStepsBack {
-       case Year;
-       case Month;
-       case Week;
-       case Day;
-    }
-    */
-
     /**
      * @throws NewsApiException
      */
-    public function getTimeBackQNews($date, string $stepBack, int $numberBack){
-        $searchDate = new \DateTime($date);
-        switch ($stepBack) {
-            case "year":
-                $searchDate = $searchDate->modify("{-1*$numberBack} year")->format('Y-m-d');
-                break;
-            case "month":
-                $searchDate = $searchDate->modify("{-1*$numberBack}  month")->format('Y-m-d');
-                break;
-            case "week":
-                $searchDate = $searchDate->modify("{-7*$numberBack}  days")->format('Y-m-d');
-                break;
-            case "day":
-                $searchDate = $searchDate->modify("{-1*$numberBack} day")->format('Y-m-d');
-                break;
-                break;
-            default:
-                $searchDate = $searchDate->modify("{-1*$numberBack} day")->format('Y-m-d');
+    public function getTimeBackNews($date, string $stepBack, int $numberBack){
+        $searchDate =  Carbon::parse($date, 'Europe/Moscow');
+        $returnWarning = "We're really sorry, but our API supports only a month back search!";
+        if ($numberBack <= 0) {
+            $searchDate = $searchDate->format('Y-m-d');
         }
-        return $this->newsProviderInstance->getEverything(domains: "habr.com, news.ycombinator.com",
-            from:$searchDate, to:$searchDate, page_size: 100);
+        elseif (($stepBack === 'month' && $numberBack) > 1 || ($stepBack === 'day' && $numberBack) > 30) {
+            $searchDate = $searchDate->modify('-1 month');
+        }
+        else{
+            $searchDate = match ($stepBack) {
+                //"year" => $searchDate->modify(-$numberBack .'year')->format('Y-m-d'),
+                "month" => $searchDate->modify(-$numberBack .'month')->format('Y-m-d'),
+                "week" => $searchDate->modify(-7*$numberBack .'days')->format('Y-m-d'),
+                default => $searchDate->modify(-$numberBack .'day')->format('Y-m-d'),
+            };
+        }
+        try{
+            // It's a wierd way, but I need to warn the user, the answer is JSON anyway
+            // json_encode([$returnWarning, $this->newsProviderInstance->getEverything(domains: implode(', ', NewsAPIController::TECH_DOMAINS),
+            //                from:$searchDate, to:$searchDate, page_size: 100)]);
+            return $this->newsProviderInstance->getEverything(domains: implode(', ', NewsAPIController::TECH_DOMAINS),
+                           from:$searchDate, to:$searchDate, page_size: 100);
+        }
+        catch (NewsApiException $e){
+            return json_encode($e);
+        }
     }
 
     /**
      * @throws NewsApiException
      */
     public function getTodayTopNews(){
-        //$searchDate = (new \DateTime())->format('Y-m-d');
         return $this->newsProviderInstance->getTopHeadLines(category: "technology", page_size: 1);
     }
 
