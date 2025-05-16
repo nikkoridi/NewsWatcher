@@ -1,0 +1,18 @@
+GET /articles/_search HTTP/1.1
+Host: {{host}}
+Content-Type: application/json
+// GET http://localhost:9200/articles/_search?q=content-part:keyword1 NOT content-part:keyword2
+
+{
+  "query":
+  { "bool" :
+  {
+    "must":[
+      {"term": {"content-part": "{{keyword1}}" } }
+      ],
+    "must_not" :[
+      {"term": {"content-part": "{{keyword2}}" } }
+    ]
+  }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "mappings": {
+    "properties": {
+      "title": { "type": "text" },
+      "author": { "type": "keyword" },
+      "url": { "type": "text" },
+      "description": { "type": "text" },
+      "content-part": { "type": "text" },
+      "publishedAt": {
+        "type":   "date",
+        "format": "basic_date_time_no_millis"
+      },
+      "source": {
+        "id": { "type": "keyword" },
+        "name": { "type": "keyword" }
+      }
+    }
+  }
+}

@@ -9,7 +9,8 @@ https://www.newscatcherapi.com/
 
 https://www.contify.com/news-api/
 
-
+https://laravel.demiart.ru/configuring-elasticsearch-in-laravel/
+https://packagist.org/packages/elasticsearch/elasticsearch
 
 Just for fun:
 https://github.com/HackerNews/API

@@ -1,0 +1,12 @@
+GET /articles/_search HTTP/1.1
+Host: {{host}}
+Content-Type: application/json
+//GET http://localhost:9200/articles/_search?q=content-part:author
+
+{
+  "query": {
+    "match": {
+      "author": "{{author}}"
+    }
+  }
+}

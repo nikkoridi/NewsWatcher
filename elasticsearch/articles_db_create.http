@@ -1,0 +1,5 @@
+PUT /articles HTTP/1.1
+Host: {{host}}
+Content-Type: application/json
+
+< create_index_article.json
