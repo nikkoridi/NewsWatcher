@@ -3,10 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\NewsAPIController;
+use Elastic\Elasticsearch\Exception\ClientResponseException;
+use Elastic\Elasticsearch\Exception\MissingParameterException;
+use Elastic\Elasticsearch\Exception\ServerResponseException;
 use Illuminate\Console\Command;
 use jcobhams\NewsApi\NewsApiException;
 
-use Elasticsearch\Client;
+use Elastic\Elasticsearch\ClientBuilder;
 
 class ElasticSearchLoadData extends Command
 {
@@ -15,7 +18,7 @@ class ElasticSearchLoadData extends Command
      *
      * @var string
      */
-    protected $signature = 'app:elastic-search-load-data';
+    protected $signature = 'app:elastic-search-load-data {query}';
 
     /**
      * The console command description.
@@ -33,7 +36,7 @@ class ElasticSearchLoadData extends Command
     public function __construct(){
         parent::__construct();
         $this->newsAPIController = new NewsAPIController();
-        $this->elasticsearch = Elasticsearch\ClientBuilder::create()
+        $this->elasticsearch = ClientBuilder::create()
             ->setHosts(['9200:9200'])
             ->build();
     }
@@ -47,7 +50,10 @@ class ElasticSearchLoadData extends Command
         $query = $this->argument('query');
          // $data = json_decode($this->newsAPIController->getEverythingQuery($query), true);
         $data = $this->newsAPIController->getEverythingQuery($query);
+        $this->line($query);
+        //$this->line(strval($data));
         foreach ($data->articles as $article) {
+            $this->line($article->title);
             $transformedData = [
                 'title' => $article->title,
                 'author' => $article->author,
@@ -55,10 +61,8 @@ class ElasticSearchLoadData extends Command
                 'description' => $article->description,
                 'content-part' => substr($article->content, 0, 170), // Shorten content to 170 symbols
                 'publishedAt' => $article->publishedAt,
-                'source' => [
-                    'id' => $article->source->id,
-                    'name' => $article->source->name,
-                ],
+                    'source-id' => $article->source->id,
+                    'source-name' => $article->source->name
             ];
 
             $params = [
@@ -66,7 +70,16 @@ class ElasticSearchLoadData extends Command
                 'type' => '_doc',
                 'body' => $transformedData,
             ];
-            $this->elasticsearch->index($params);
+            try {
+                $this->elasticsearch->index($params);
+                $this->line("ok");
+            } catch (ClientResponseException $e) {
+                $this->line("Client response error");
+            } catch (MissingParameterException $e) {
+                $this->line("Missing parameter response error");
+            } catch (ServerResponseException $e) {
+                $this->line("Server response error");
+            }
         }
     }
 }
